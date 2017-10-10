@@ -3,75 +3,82 @@
 import ConfigReader
 import DBUtils
 
+def getMultipleStatusQryStr():
+	mulStatus = ConfigReader.getValue('allocation', 'welCalStatusToPick').split(',')
+	qry = ''
+	for status in mulStatus:
+		qry = qry+' status='+status+' or'
+	qry = qry[:-3]
+	qry = qry
+	return qry
 
-role = ConfigReader.getValue('db', 'role')
+def makeValidWelCalQry(max):	
+	qry = 'SELECT id FROM welcome_calls WHERE '
+	qry = qry + getMultipleStatusQryStr()
+	qry = qry + ' limit '+str(max)
+	# print qry
+	return qry
 
-print  'role = '+role
+def getMaxValWelCal(max):
+	# Get valid welcome_calls, where status=0 or status=4. [NEW, INCOMPLETE]
+		validWelcomeCallsQuery = makeValidWelCalQry(max)
+		valWelCal = DBUtils.executeSelectQuery(validWelcomeCallsQuery)
+		return valWelCal
 
-conn = DBUtils.getConnection()
-conn2 = DBUtils.getConnection()
-conn3 = DBUtils.getConnection()
+def getRemCountForAgent(agentId, limit, pendStatus):
+	qry = 'SELECT COUNT(*) FROM welcome_calls WHERE agent_id='+str(agentId)+' AND '+' status='+str(pendStatus)
+	rem = DBUtils.executeSelectQuery(qry)
+	# print 'rem='+str(rem)
+	return (limit - int(rem[0][0]))
 
-# bima_customer, bima_user_role_permission
-# No null values for user_id in bima_customer?
-filterAgentsQuery = 'SELECT user_id, role_id FROM bima_user_role_permission WHERE user_id > 0 and role_id = '+role+' limit 10'
-
-print filterAgentsQuery
-
-agentsCursor = conn.cursor()
-
-agentsCursor.execute(filterAgentsQuery)
-
-# print 'agentsCursor: '
-# for row in agentsCursor:
-# 	print 'user_id - '+ str(row[0]) +', role_id - '+ str(row[1])	
-		
-
-# welcome_calls
-# status=1 or status=4
-# Get calls without agentId only.
-validWelcomeCallsQuery = 'SELECT id FROM welcome_calls WHERE status = 1 or status = 4 '+' limit 10'
-
-wcCursor = conn2.cursor()
-
-wcCursor.execute(validWelcomeCallsQuery)
-
-
-updateCursor = conn3.cursor()
-
-count = 0
-limit = ConfigReader.getValue( 'db', 'assignCount')
-curAgent = agentsCursor.fetchone()
-newStatus = 123
-
-print 'Welcome Calls:'
-
-for row in wcCursor:
-	curCall = row
-	curCallId = curCall[0]
-	curAgentId = curAgent[0]
-	newStatus = 123
-	if (count < limit):
-		print 'sss'
-		updateQuery = 'UPDATE welcome_calls SET status=123, agent_id='+str(curAgentId)+' where id='+str(curCallId)
-		print 'updateQuery - '+updateQuery
-		updateCursor.execute(updateQuery)
-		count=count+1
-	else :
-		curAgent = agentsCursor.fetchone()
-		count = 0
-		print curAgent
-
-updateCursor = conn3.cursor()
-updateQuery = 'UPDATE welcome_calls SET status=123,agent_id=1 where id=2'
-updateCursor.execute(updateQuery)
-conn3.commit();
+def setRemWelCalToAgent(agentId, rem, allocatingStatus):	
+	qry = 'UPDATE welcome_calls SET agent_id='+str(agentId)+',status='+str(allocatingStatus)+' WHERE '	
+	qry = qry + getMultipleStatusQryStr()
+	qry = qry + ' limit '+str(rem)
+	print qry
+	DBUtils.executeUpdateQuery(qry)
+	return
 
 
-wcCursor.close()
-agentsCursor.close()
-updateCursor.close()
+def allocate():
+	try:
+		role = ConfigReader.getValue('db', 'role')
+		print  'role = '+role
+		allocatingStatus=ConfigReader.getValue('allocation', 'allocatingStatus')
+		assignlimit = int(ConfigReader.getValue( 'db', 'assignCount'))
 
-conn.close()
-conn2.close()
-conn3.close()
+		# bima_customer, bima_user_role_permission, No null values for user_id in bima_customer?
+		filterAgentsQuery = 'SELECT user_id, role_id FROM bima_user_role_permission WHERE user_id > 0 and role_id = '+role
+		# print filterAgentsQuery
+
+		validAgents = DBUtils.executeSelectQuery(filterAgentsQuery)
+
+		if ( len(validAgents) == 0):
+			print 'No valid Agents found: '+filterAgentsQuery
+			return
+
+		for agent in validAgents:
+			print ''
+			print 'agent - '+str(agent)
+			agentId = agent[0]
+			rem = (getRemCountForAgent(agentId,assignlimit,allocatingStatus))
+			if (rem > 0) :
+				print 'rem - '+str(rem)
+				# In case no rows affected, we can check if there are any welcome calls remaining, else stop.
+				setRemWelCalToAgent(agentId, rem, allocatingStatus)
+			else:
+				print 'No more assignment required for agent:'+str(agent)
+			
+	except Exception as e:
+		print 'Exception while allocating'
+		raise e
+	finally:
+		pass
+
+def testSetup():
+	updateQuery = 'UPDATE welcome_calls SET status=4,agent_id=100 where id=2'
+	DBUtils.executeUpdateQuery(updateQuery)
+
+# testSetup()
+
+allocate()
