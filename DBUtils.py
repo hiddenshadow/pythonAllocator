@@ -28,6 +28,13 @@ def getConnection():
 	return conn
 
 def executeInsertQuery(query):
+	try:
+		pass
+	except Exception as e:
+		raise e
+	finally:
+		pass
+	return
 
 
 
@@ -41,8 +48,7 @@ def executeSelectQuery(query):
 		print 'Exception while executing Select Query: '+str(query)
 	finally:
 		cursor.close()
-		conn.close()
-					
+		conn.close()					
 	return res
 
 
@@ -58,5 +64,7 @@ def executeUpdateQuery(query):
 	finally:
 		cursor.close()
 		conn.close()				
-	
 	return
+
+def executeInsertQuery(query):
+	return executeUpdateQuery(query)

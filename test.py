@@ -3,10 +3,14 @@
 import DBUtils
 import ConfigReader
 import main
+import time
 
-def insertWelcomeCalls(count):
-	
-	return
+def getCurTime():
+	timeInSec = int(time.time())
+	# print 'timeInSec: '+str(timeInSec)
+	return timeInSec
+
+
 
 
 def testSelectQuery():
@@ -36,6 +40,28 @@ def testSetRemWelCalToAgent():
 	allocatingStatus=3
 	main.setRemWelCalToAgent(agentId, rem, allocatingStatus)
 
+def insertWelcomeCalls(count):
+	total = 0 
+	user_id=3210
+	agent_id=0
+	status=1
+	partner_country_id=111
+	created_by=1010
+	created_date='NOW()'
+	policy_id=3333
+
+	valStr = ''
+	while (total < count):
+		user_id = user_id + total
+		valStr = valStr + '('+str(user_id)+','+str(agent_id)+','+str(status)+','+str(partner_country_id)+','+str(created_by)+','+str(created_date)+','+str(policy_id)+'),'
+		total = total+1
+	valStr = valStr[:-1]
+
+	qry = 'INSERT INTO welcome_calls (user_id,agent_id,status,partner_country_id,created_by,created_date,policy_id) values '+valStr
+	print 'insertWelcomeCalls qry: '+qry
+	DBUtils.executeInsertQuery(qry)
+	return
+
 
 # testSetRemWelCalToAgent()
 
@@ -44,3 +70,5 @@ def testSetRemWelCalToAgent():
 # main.makeValidWelCalQry()
 
 # testGetRemCountForAgent()
+
+# insertWelcomeCalls(1)
