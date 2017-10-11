@@ -4,6 +4,10 @@ import DBUtils
 import ConfigReader
 import main
 
+def insertWelcomeCalls(count):
+	
+	return
+
 
 def testSelectQuery():
 	role = ConfigReader.getValue('db', 'role')
@@ -33,7 +37,7 @@ def testSetRemWelCalToAgent():
 	main.setRemWelCalToAgent(agentId, rem, allocatingStatus)
 
 
-testSetRemWelCalToAgent()
+# testSetRemWelCalToAgent()
 
 # testSelectQuery()
 

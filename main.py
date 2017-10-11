@@ -9,7 +9,6 @@ def getMultipleStatusQryStr():
 	for status in mulStatus:
 		qry = qry+' status='+status+' or'
 	qry = qry[:-3]
-	qry = qry
 	return qry
 
 def makeValidWelCalQry(max):	
@@ -21,9 +20,9 @@ def makeValidWelCalQry(max):
 
 def getMaxValWelCal(max):
 	# Get valid welcome_calls, where status=0 or status=4. [NEW, INCOMPLETE]
-		validWelcomeCallsQuery = makeValidWelCalQry(max)
-		valWelCal = DBUtils.executeSelectQuery(validWelcomeCallsQuery)
-		return valWelCal
+	validWelcomeCallsQuery = makeValidWelCalQry(max)
+	valWelCal = DBUtils.executeSelectQuery(validWelcomeCallsQuery)
+	return valWelCal
 
 def getRemCountForAgent(agentId, limit, pendStatus):
 	qry = 'SELECT COUNT(*) FROM welcome_calls WHERE agent_id='+str(agentId)+' AND '+' status='+str(pendStatus)
@@ -40,24 +39,29 @@ def setRemWelCalToAgent(agentId, rem, allocatingStatus):
 	return
 
 
+def getAgents():
+	role = ConfigReader.getValue('db', 'role')
+
+	# bima_customer, bima_user_role_permission.
+	filterAgentsQuery = 'SELECT user_id, role_id FROM bima_user_role_permission WHERE user_id > 0 and role_id = '+role
+	# print filterAgentsQuery
+
+	validAgents = DBUtils.executeSelectQuery(filterAgentsQuery)
+	return validAgents
+
+
 def allocate():
 	try:
-		role = ConfigReader.getValue('db', 'role')
-		print  'role = '+role
 		allocatingStatus=ConfigReader.getValue('allocation', 'allocatingStatus')
-		assignlimit = int(ConfigReader.getValue( 'db', 'assignCount'))
+		assignlimit = ConfigReader.getIntValue( 'db', 'assignCount')
 
-		# bima_customer, bima_user_role_permission, No null values for user_id in bima_customer?
-		filterAgentsQuery = 'SELECT user_id, role_id FROM bima_user_role_permission WHERE user_id > 0 and role_id = '+role
-		# print filterAgentsQuery
+		agents = getAgents()
 
-		validAgents = DBUtils.executeSelectQuery(filterAgentsQuery)
-
-		if ( len(validAgents) == 0):
+		if ( len(agents) == 0):
 			print 'No valid Agents found: '+filterAgentsQuery
 			return
 
-		for agent in validAgents:
+		for agent in agents:
 			print ''
 			print 'agent - '+str(agent)
 			agentId = agent[0]

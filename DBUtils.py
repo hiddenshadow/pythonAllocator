@@ -27,6 +27,9 @@ def getConnection():
 
 	return conn
 
+def executeInsertQuery(query):
+
+
 
 def executeSelectQuery(query):
 	try:
