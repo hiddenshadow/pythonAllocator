@@ -7,10 +7,13 @@ import time
 
 def getCurTime():
 	timeInSec = int(time.time())
-	# print 'timeInSec: '+str(timeInSec)
+	print 'timeInSec: '+str(timeInSec)
 	return timeInSec
 
 
+def testSetup():
+	updateQuery = 'UPDATE welcome_calls SET status=4,agent_id=100 where id=2'
+	DBUtils.executeUpdateQuery(updateQuery)
 
 
 def testSelectQuery():
@@ -62,6 +65,9 @@ def insertWelcomeCalls(count):
 	DBUtils.executeInsertQuery(qry)
 	return
 
+# testSetup()
+
+getCurTime()
 
 # testSetRemWelCalToAgent()
 

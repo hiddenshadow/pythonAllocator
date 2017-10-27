@@ -80,10 +80,5 @@ def allocate():
 		pass
 	return
 
-def testSetup():
-	updateQuery = 'UPDATE welcome_calls SET status=4,agent_id=100 where id=2'
-	DBUtils.executeUpdateQuery(updateQuery)
 
-# testSetup()
-
-allocate()
+# allocate()
